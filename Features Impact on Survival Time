@@ -1,0 +1,50 @@
+With the KaplanMeierFitter in the lifelines package, we could detect the impact of categorical feature on the objects life time.
+Because the number of features will affect on the model's running time and performance, we could condier to kick the tiny impactive features out brfore modeling
+
+The main idea is comparing the survival function curve in different group of data points
+The whole data set is splitted based on one feature
+
+STEP 1: Transform numerical features to categorical features (according to distribution or practical understanding)
+
+STEP 2: Plot the survival function curves and detect the significantation of differences in curves looks similar
+from lifelines.statistics import logrank_test
+from lifelines import KaplanMeierFitter
+
+# Plot Survival Function Curve
+kmf_[feature] = KaplanMeierFitter() 
+
+groups = fine_cat_df[[featur]]        # The feature must be categorical          
+ix1 = (groups == ct1)  
+ix2 = (groups == ct2)        
+ix3 = (groups == ct3)   
+ix4 = (groups == ct4) 
+ix5 = (groups == ct5) 
+ix6 = (groups == ct6) 
+ix7 = (groups == ct7)
+
+kmf_[feature].fit(T[ix1], E[ix1], label=ct1)    
+ax = kmf_[feature].plot()
+kmf_[feature].fit(T[ix2], E[ix2], label=ct2)   
+ax1 = kmf_[feature].plot(ax=ax)
+kmf_[feature].fit(T[ix3], E[ix3], label=ct3) 
+ax2 = kmf_[feature].plot(ax=ax1)
+kmf_[feature].fit(T[ix4], E[ix4], label=ct4)
+ax3 = kmf_[feature].plot(ax=ax2)
+kmf_[feature].fit(T[ix5], E[ix5], label=ct5)
+ax4 = kmf_[feature].plot(ax=ax3)
+kmf_[feature].fit(T[ix6], E[ix6], label=ct6)
+ax5 = kmf_[feature].plot(ax=ax4)
+kmf_[feature].fit(T[ix7], E[ix7], label=ct7)
+kmf_[feature].plot(ax=ax5)                
+
+# Define logrank test
+output = logrank_test(
+durations_A = fine_cat_df[ix1].c_Cum_MM_Active,
+durations_B = fine_cat_df[ix2].c_Cum_MM_Active,
+durations_C = fine_cat_df[ix3].c_Cum_MM_Active,    
+event_observed_A = fine_cat_df[ix1].y_Churn,
+event_observed_B = fine_cat_df[ix2].y_Churn,
+event_observed_C = fine_cat_df[ix3].y_Churn)
+output.print_summary
+
+The p-value is less than 0.05, we can reject that the null hypothesis (survival curves are identical)
