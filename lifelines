@@ -1,0 +1,37 @@
+Several Models applied from the lifelines package (https://lifelines.readthedocs.io/en/latest/index.html)
+
+# Encode all categorical data
+# Split data into training and validation datasets
+
+1. Cox Proportional Hazard Model
+from lifelines import CoxPHFitter
+
+cph = CoxPHFitter(baseline_estimation_method="spline", n_baseline_knots=3)     # 2 and 8 are reasonable
+# The baseline_estimation_method and n_baseline_knots from privious best model
+cph.fit(df_model_dummy_train, 'time column', event_col='Churn')  
+cph.print_summary()  
+
+#In the context of survival analysis, calibration refers to the agreement between predicted probabilities and observed event rates or 
+#frequencies of the outcome within a given duration of time.
+survival_probability_calibration(cph, df_model_dummy_train, t0=12)
+
+# With default scoring method, returns the average partial log-likelihood.
+cph.score(df_modelNPL_dummy_valid)
+
+
+2. Time-varying Cox Regression Model
+Covariates can change over time, incorporate changes over time into our survival analysis by using a modification of the Cox model.
+To running this model, there should be a start and a stop column in the dataset, which inflect the change of scenario for one object
+It means that we supposed (or say we like to confirm) the covairiates changes with a specific event happen
+e.g. When study survival probability of patitents with breast cancer, the specific event is the surgery. We could separate the experiment into two phases 
+for someone take the surgery before passing away (the target event happen)
+It also means that we could have several records for one object (in different scenarios) in same 'ID', but have several rows
+
+# Prepare the data for time-varying model, in this project, the special event is the renew season (if the customer churn before the renew season or after that)
+
+# Running model
+from lifelines import CoxTimeVaryingFitter
+
+ctv = CoxTimeVaryingFitter(penalizer=0.1)
+ctv.fit(df_model_TimeVary_dummy_train, id_col="Id", event_col="Churn", start_col="start", stop_col="stop", show_progress=True)
+ctv.print_summary()
