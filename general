@@ -1,0 +1,68 @@
+Three parts of dataset: Impactive features (X), Time Column, Event Column
+
+STEP 1: Identify the appropriate time column
+In the practical projects, information are collected in several time grid. Based on the goal of the analysis, select the accumulated member existing time as the time column
+Because the subscriptions of the products are renewed every year, also skim the data points which represent the new customers (who do not have an opportunity to decide to churn)
+
+# Plot the general distribution of time column, eyeballing the existing length of customers
+plt.hist(df_skimed['Cum_MM_Active'],bins=36)
+
+
+STEP 2: Apply the Kaplan-Meier Estimator to plot the survival function, get a general idea about the survival probabilities with time changing
+# For each point on the curve, we could describe the data like: 
+# y is the probability that the time between a member start his membership and end his membership is greater than x months.
+from lifelines import KaplanMeierFitter
+durations = df_skimed['Cum_MM_Active']
+event_observed = df_skimed['Churn']
+
+kmf = KaplanMeierFitter() 
+# Fit the data into the model
+kmf.fit(durations, event_observed,label='Kaplan Meier Estimate')
+# Create an estimate
+kmf.plot(ci_show=False)                                  #ci_show is if the confidence interval showed on the plot
+plt.title('Survival Function of Member Retention')
+# Also calculate the estimated median time to churn for a customer
+kmf.median_survival_time_
+
+
+STEP 3: Fit in several parameter model fast and auto pick the best model 
+# Just for general idea before further analyzing
+# Plot QQ plot for virsualized model performance
+
+from lifelines.plotting import qq_plot
+# AIC comparisons between univariate parametric models
+from lifelines.utils import find_best_parametric_model
+from lifelines import (WeibullFitter, ExponentialFitter, LogNormalFitter, LogLogisticFitter, 
+                       NelsonAalenFitter, GeneralizedGammaFitter)
+
+fig, axes = plt.subplots(3, 2, figsize=(12, 8))
+
+durations = df_skimed['Cum_MM_Active']
+event_observed = df_skimed['Churn']
+
+kmf = KaplanMeierFitter().fit(durations, event_observed, label='KaplanMeierFitter')
+wbf = WeibullFitter().fit(durations, event_observed, label='WeibullFitter')
+exf = ExponentialFitter().fit(durations, event_observed, label='ExponentialFitter')
+lnf = LogNormalFitter().fit(durations, event_observed, label='LogNormalFitter')
+llf = LogLogisticFitter().fit(durations, event_observed, label='LogLogisticFitter')
+gg = GeneralizedGammaFitter().fit(durations, event_observed, label='GeneralizedGammaFitter')
+
+kmf.plot_survival_function(ax=axes[0][0])
+wbf.plot_survival_function(ax=axes[1][1])
+exf.plot_survival_function(ax=axes[0][1])
+lnf.plot_survival_function(ax=axes[1][0])
+llf.plot_survival_function(ax=axes[2][0])
+gg.plot_survival_function(ax=axes[2][1])
+
+# Plot QQ plot for evaluating performance 
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+axes = axes.reshape(4,)
+
+for i, model in enumerate([WeibullFitter(), LogNormalFitter(), LogLogisticFitter(), ExponentialFitter()]):
+    model.fit(durations, event_observed)
+    qq_plot(model, ax=axes[i])
+
+# Select the best model with lower AIC
+best_model, best_aic_ = find_best_parametric_model(durations, event_observed, scoring_method="AIC")
+# Best parametric models
+best_model.plot_survival_function()
