@@ -1,0 +1,103 @@
+Applied models in PySurvival (https://square.github.io/pysurvival/index.html)
+This package is a great one which contain algorithm appling Deep Learning into Survival Analysis
+Comparing with other packages which also allows deep learning in the survival analysis, it allows more modeling flexibility in Neural Networks design
+* required C++ 14.0+ to install
+
+1. DeepSurv/Non-Linear CoxPH Model
+### The plain model
+
+# Structure the Model
+# Each dictionary corresponds to a fully connected hidden layer:
+structure = [ {'activation': 'LeakyReLU', 'num_units': 64},{'activation': 'LeakyReLU', 'num_units': 64} ]
+# Building the model
+nonlinear_coxph = NonLinearCoxPHModel(structure=structure)
+nonlinear_coxph.fit(X_train, Time_train, Event_train, lr=1e-3, init_method = 'glorot_uniform', optimizer = 'sgd',num_epochs = 100)
+** the large learning rate could indicate gradient exploded **
+
+### Model with GridSearch and a self-defined NN structure create function (in the functional_block file)
+# Sets of activation functions which could be applied in the DeepSurvi model
+act_function = ['ReLU']
+LU_function = ['ReLU','LeakyReLU','SELU']
+Sigmoid_function = ['BipolarSigmoid','LogSigmoid','Sigmoid']
+Tan_function1 = ['Atan','Hardtanh']
+Tan_function2 = ['LeCunTanh','Tanh']
+Soft_function = ['Softsign','Softplus']
+Simple_function = ['BentIdentity','Gaussian','Identity']
+Other_function = ['LogLog','Sinc','Swish']
+# list of node number
+units_list =[64,128,256]
+
+from pysurvival.models.semi_parametric import *
+from pysurvival.models.survival_forest import *
+from pysurvival.models.non_parametric import *
+from pysurvival.models.parametric import *
+from pysurvival.models.svm import *
+from pysurvival.models.multi_task import *
+from pysurvival.utils.metrics import *
+from pysurvival.utils.display import *
+
+# Define a function to fit the model and generate the concordance index as evaluator
+def fit_DeepSurvival (model_structure, model_data_dummy, time_column,event_column, train_set_portion=0.8,
+                      learn_rate=1e-4, init_method='glorot_uniform',optimizer='adam',epochs=300,dropout=0.5):
+    # Split dataset
+    mask = np.random.rand(len(model_data_dummy)) <= train_set_portion
+    df_model_dummy_train = model_data_dummy[mask]
+    df_model_dummy_valid = model_data_dummy[~mask]
+    
+    #Time_Column is the target values describing the time when the event of interest or censoring occurred.
+    #Event_Column is values that indicate if the event of interest occurred 
+    #i.e.: E[i]=1 corresponds to an event, and E[i] = 0 means censoring, for all i.
+    
+    df_model_train_DeepS = df_model_dummy_train.reset_index( drop = True )
+    df_model_valid_DeepS = df_model_dummy_valid.reset_index( drop = True )
+    X_train, X_valid = df_model_train_DeepS.drop(columns = [time_column,event_column]).astype(np.uint8), df_model_valid_DeepS.drop(columns = [time_column,event_column]).astype(np.uint8)
+    T_train, T_valid = df_model_train_DeepS[time_column].values.astype(np.uint8), df_model_valid_DeepS[time_column].values.astype(np.uint8)
+    E_train, E_valid = df_model_train_DeepS[event_column].values.astype(np.uint8), df_model_valid_DeepS[event_column].values.astype(np.uint8)
+    
+    structure = model_structure
+    # Building the model
+    nonlinear_coxph = NonLinearCoxPHModel(structure=structure)
+    nonlinear_coxph.fit(X_train, T_train, E_train, lr=learn_rate, init_method = init_method, optimizer = optimizer,num_epochs = epochs,dropout = dropout)
+    
+    # Evaluate the performance with concordance index  and Integrated Brier score
+    c_index = concordance_index(nonlinear_coxph, X_valid, T_valid, E_valid) 
+    # ibs = integrated_brier_score(nonlinear_coxph, X_valid, T_valid, E_valid, t_max=10,figure_size=(20, 6.5) )
+    return c_index
+  
+
+all_structure = model_structure_list           # from the structure generate function
+all_dropouts = [0.1, 0.2]
+all_lr = [0.001,1e-4,1e-6]
+all_optimizer = ['adagrad','adam','sgd']       # ['adamax','adadelta','rmsprop','sparseadam']
+model_data = df_model_dummy                    # Just dummy, un-separated
+time_column = 'Cum_MM_Active'
+event_column = 'Churn'
+
+import time
+from datetime import timedelta
+from datetime import datetime
+import random
+n_iter = 200                       #Number of random iterations to run
+
+out = pd.DataFrame(columns=['Structure','Learning Rate','optimizer', 'Dropout','Concordance Index'])    # a dataframe to collect the result and key parameters
+count=0                           #Iteration counter
+start = time.time()
+for x in tqdm(range(n_iter)):
+    i = random.randint(0,len(all_structure)-1)                     #Select Structure
+    j = random.randint(0,1)                                        #Select Dropout
+    k = random.randint(0,2)                                        #Select Learning Rate
+    p = random.randint(0,2)                                        #Select Optimizer
+    c = fit_DeepSurvival (model_structure = all_structure[i],  learn_rate=all_lr[k], dropout=all_dropouts[j], optimizer=all_optimizer[p],
+                          time_column = time_column,event_column = event_column,model_data_dummy = model_data, 
+                          train_set_portion=0.8, init_method='glorot_uniform',epochs=500)
+                          # all iterable parameters put in front of fixed parameters
+                          
+    if c <= 0.7:       # Do not report the result when the C-Index lower than 0.7
+        continue
+    out.loc[len(out)] = (all_structure[i], all_lr[k], all_optimizer[p],all_dropouts[j],c)
+    count += 1         #Increment counter
+    elapsed = time.time()-start
+    print('Completed {} out of {} iterations in time {} '.format(count,n_iter,str(timedelta(seconds=elapsed)) ))
+    print(out.iloc[[-1]])
+    filename = 'path + str(time.strftime("%Y%m%d_%H%M%S"))+'.csv'
+    out.to_csv(filename)       # report result as csv
