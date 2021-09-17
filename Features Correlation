@@ -1,0 +1,10 @@
+General a correlation matrix for numerical features, consider encode (or dummy) categorical features at first
+
+#Correlation Matrix
+num_cols = df.select_dtypes(include=['number']).columns
+
+Var_Corr = df[num_cols].corr()                                         #Calculate the correlations
+fig, ax = plt.subplots(figsize=(15,13))                                # figsize in inches
+cmap = sns.diverging_palette(220, 20, as_cmap=True)                    # Set the palette colors
+sns.heatmap(Var_Corr, xticklabels=Var_Corr.columns, yticklabels=Var_Corr.columns,
+            annot=True, linewidths=.5, ax=ax, cmap = cmap)             
