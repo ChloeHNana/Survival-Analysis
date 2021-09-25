@@ -1,0 +1,13 @@
+import sksurv
+from sksurv.linear_model import CoxPHSurvivalAnalysis
+
+X = df.drop([Event,Time],axis = 1)
+y = sksurv.util.Surv.from_dataframe(Event,Time,df)
+alpha = 0.1                                     # Penalty term, could be any number.
+
+cph = CoxPHSurvivalAnalysis()
+cph.set_params(alpha=alpha)
+cph.fit(X,y)
+cindex = cph.score(X,y)                         #
+    
+
