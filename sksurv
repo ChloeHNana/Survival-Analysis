@@ -8,6 +8,6 @@ alpha = 0.1                                     # Penalty term, could be any num
 cph = CoxPHSurvivalAnalysis()
 cph.set_params(alpha=alpha)
 cph.fit(X,y)
-cindex = cph.score(X,y)                         #
+cindex = cph.score(X,y)                         # Concordance Index
     
 
