@@ -1,5 +1,5 @@
 Applied models in PySurvival (https://square.github.io/pysurvival/index.html)
-This package is a great one which contain algorithm appling Deep Learning into Survival Analysis
+This package is a great one which contains algorithm applying Deep Learning into Survival Analysis
 Comparing with other packages which also allows deep learning in the survival analysis, it allows more modeling flexibility in Neural Networks design
 * required C++ 14.0+ to install
 
@@ -80,7 +80,7 @@ import random
 n_iter = 200                       #Number of random iterations to run
 
 out = pd.DataFrame(columns=['Structure','Learning Rate','optimizer', 'Dropout','Concordance Index'])    # a dataframe to collect the result and key parameters
-count=0                           #Iteration counter
+count=0                           
 start = time.time()
 for x in tqdm(range(n_iter)):
     i = random.randint(0,len(all_structure)-1)                     #Select Structure
@@ -92,12 +92,11 @@ for x in tqdm(range(n_iter)):
                           train_set_portion=0.8, init_method='glorot_uniform',epochs=500)
                           # all iterable parameters put in front of fixed parameters
                           
-    if c <= 0.7:       # Do not report the result when the C-Index lower than 0.7
+    if c <= 0.7:       # Do not report the result when the C-Index lower than 0.7, threshold from other experiments
         continue
     out.loc[len(out)] = (all_structure[i], all_lr[k], all_optimizer[p],all_dropouts[j],c)
-    count += 1         #Increment counter
+    count += 1         
     elapsed = time.time()-start
     print('Completed {} out of {} iterations in time {} '.format(count,n_iter,str(timedelta(seconds=elapsed)) ))
     print(out.iloc[[-1]])
-    filename = 'path + str(time.strftime("%Y%m%d_%H%M%S"))+'.csv'
-    out.to_csv(filename)       # report result as csv
+   
