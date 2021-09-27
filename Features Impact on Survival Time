@@ -1,12 +1,12 @@
-With the KaplanMeierFitter in the lifelines package, we could detect the impact of categorical feature on the objects life time.
-Because the number of features will affect on the model's running time and performance, we could condier to kick the tiny impactive features out brfore modeling
-
-The main idea is comparing the survival function curve in different group of data points
-The whole data set is splitted based on one feature
-
+With the KaplanMeierFitter in the lifelines package, we could detect the impact of the categorical feature on the objects' time.
+Because the number of features will affect the model's running time and performance, we could consider kicking the tiny impactive features out before modeling
+	 
+The main idea is to compare the survival function curve in different groups of data points
+The whole data set is split based on one feature
+	 
 STEP 1: Transform numerical features to categorical features (according to distribution or practical understanding)
-
-STEP 2: Plot the survival function curves and detect the significantation of differences in curves looks similar
+	 
+STEP 2: Plot the survival function curves and detect the signification of differences in curves that looks similar
 from lifelines.statistics import logrank_test
 from lifelines import KaplanMeierFitter
 
@@ -39,12 +39,12 @@ kmf_[feature].plot(ax=ax5)
 
 # Define logrank test
 output = logrank_test(
-durations_A = fine_cat_df[ix1].c_Cum_MM_Active,
-durations_B = fine_cat_df[ix2].c_Cum_MM_Active,
-durations_C = fine_cat_df[ix3].c_Cum_MM_Active,    
-event_observed_A = fine_cat_df[ix1].y_Churn,
-event_observed_B = fine_cat_df[ix2].y_Churn,
-event_observed_C = fine_cat_df[ix3].y_Churn)
+durations_A = fine_cat_df[ix1].Time,
+durations_B = fine_cat_df[ix2].Time,
+durations_C = fine_cat_df[ix3].Time,    
+event_observed_A = fine_cat_df[ix1].Event,
+event_observed_B = fine_cat_df[ix2].Event,
+event_observed_C = fine_cat_df[ix3].Event)
 output.print_summary
 
 The p-value is less than 0.05, we can reject that the null hypothesis (survival curves are identical)
