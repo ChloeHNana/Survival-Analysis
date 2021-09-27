@@ -8,15 +8,15 @@ from lifelines import CoxPHFitter
 
 cph = CoxPHFitter(baseline_estimation_method="spline", n_baseline_knots=3)     # 2 and 8 are reasonable
 # The baseline_estimation_method and n_baseline_knots from privious best model
-cph.fit(df_model_dummy_train, 'time column', event_col='Churn')  
+cph.fit(df_model_train, 'time column', event_col='event column')  
 cph.print_summary()  
 
 #In the context of survival analysis, calibration refers to the agreement between predicted probabilities and observed event rates or 
 #frequencies of the outcome within a given duration of time.
-survival_probability_calibration(cph, df_model_dummy_train, t0=12)
+survival_probability_calibration(cph, df_model_train, t0=12)
 
 # With default scoring method, returns the average partial log-likelihood.
-cph.score(df_modelNPL_dummy_valid)
+cph.score(df_model_valid)
 
 
 2. Time-varying Cox Regression Model
@@ -33,5 +33,5 @@ It also means that we could have several records for one object (in different sc
 from lifelines import CoxTimeVaryingFitter
 
 ctv = CoxTimeVaryingFitter(penalizer=0.1)
-ctv.fit(df_model_TimeVary_dummy_train, id_col="Id", event_col="Churn", start_col="start", stop_col="stop", show_progress=True)
+ctv.fit(df_model_TimeVary_train, id_col="Id", event_col=Event, start_col="start", stop_col="stop", show_progress=True)
 ctv.print_summary()
