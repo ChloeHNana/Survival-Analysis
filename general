@@ -1,27 +1,26 @@
-Three parts of dataset: Impactive features (X), Time Column, Event Column
+Contain three elements in the dataset: Impactive features (X), Time Column, Event Column
 
 STEP 1: Identify the appropriate time column
-In the practical projects, information are collected in several time grid. Based on the goal of the analysis, select the accumulated member existing time as the time column
+In practical projects, information is collected in several time grids. Based on the goal of the analysis, select the accumulated member existing time as the time column
 Because the subscriptions of the products are renewed every year, also skim the data points which represent the new customers (who do not have an opportunity to decide to churn)
 
 # Plot the general distribution of time column, eyeballing the existing length of customers
-plt.hist(df_skimed['Cum_MM_Active'],bins=36)
+plt.hist(df_skimed['Cum_MM_Active'],bins=?)
 
 
 STEP 2: Apply the Kaplan-Meier Estimator to plot the survival function, get a general idea about the survival probabilities with time changing
 # For each point on the curve, we could describe the data like: 
-# y is the probability that the time between a member start his membership and end his membership is greater than x months.
+# y is the probability that the time between a objective start this experiement to the end of this experiment (the event occure) is greater than x months.
 from lifelines import KaplanMeierFitter
-durations = df_skimed['Cum_MM_Active']
-event_observed = df_skimed['Churn']
+durations = df_skimed[Time]
+event_observed = df_skimed[Event]
 
 kmf = KaplanMeierFitter() 
 # Fit the data into the model
 kmf.fit(durations, event_observed,label='Kaplan Meier Estimate')
 # Create an estimate
 kmf.plot(ci_show=False)                                  #ci_show is if the confidence interval showed on the plot
-plt.title('Survival Function of Member Retention')
-# Also calculate the estimated median time to churn for a customer
+# Also calculate the estimated median time to event occure
 kmf.median_survival_time_
 
 
@@ -37,8 +36,8 @@ from lifelines import (WeibullFitter, ExponentialFitter, LogNormalFitter, LogLog
 
 fig, axes = plt.subplots(3, 2, figsize=(12, 8))
 
-durations = df_skimed['Cum_MM_Active']
-event_observed = df_skimed['Churn']
+durations = df_skimed[Time]
+event_observed = df_skimed[Event]
 
 kmf = KaplanMeierFitter().fit(durations, event_observed, label='KaplanMeierFitter')
 wbf = WeibullFitter().fit(durations, event_observed, label='WeibullFitter')
